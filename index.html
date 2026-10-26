@@ -1,0 +1,2136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#fdfdfc">
+  <title>拼贴诗日记</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&amp;family=Inter:wght@300;400;500&amp;family=Noto+Serif+SC:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --paper: #fdfdfc;
+      --ink: #111111;
+      --muted: #9a9a97;
+      --soft: #f3f3f0;
+      --line: #e6e6e2;
+      --line-dark: #cfcfca;
+      --safe-top: max(10px, env(safe-area-inset-top));
+      --safe-bottom: max(16px, env(safe-area-inset-bottom));
+      --sheet-width: min(calc(100vw - 16px), 464px);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html {
+      background: #eeeeec;
+    }
+
+    body {
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      justify-content: center;
+      color: var(--ink);
+      background: #eeeeec;
+      font-family: "Inter", "Noto Serif SC", sans-serif;
+      overflow-x: hidden;
+      touch-action: manipulation;
+    }
+
+    button,
+    input {
+      color: inherit;
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button:focus-visible,
+    input:focus-visible {
+      outline: 2px solid var(--ink);
+      outline-offset: 3px;
+    }
+
+    .arrow-icon {
+      width: 12px;
+      height: 12px;
+      position: relative;
+      display: inline-block;
+      flex: none;
+      color: currentColor;
+      vertical-align: -1px;
+    }
+
+    .arrow-icon::before {
+      content: "";
+      position: absolute;
+      left: 1px;
+      bottom: 1px;
+      width: 12px;
+      height: 1px;
+      background: currentColor;
+      transform: rotate(-45deg);
+      transform-origin: left center;
+    }
+
+    .arrow-icon::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 5px;
+      height: 5px;
+      border-top: 1px solid currentColor;
+      border-right: 1px solid currentColor;
+    }
+
+    .app-shell {
+      width: 100%;
+      max-width: 480px;
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      background: var(--paper);
+    }
+
+    .topbar {
+      min-height: 58px;
+      padding: calc(var(--safe-top) + 2px) 19px 4px;
+      position: relative;
+      z-index: 20;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      background: rgba(253, 253, 252, 0.94);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+
+    .icon-button {
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+    }
+
+    .icon-button:first-child {
+      justify-self: start;
+    }
+
+    .icon-button:last-child {
+      justify-self: end;
+    }
+
+    .grid-icon {
+      width: 14px;
+      height: 14px;
+      display: grid;
+      grid-template-columns: repeat(3, 2px);
+      grid-template-rows: repeat(3, 2px);
+      gap: 3px;
+    }
+
+    .grid-icon i {
+      display: block;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .book-icon {
+      width: 15px;
+      height: 17px;
+      position: relative;
+      display: block;
+      border: 1px solid currentColor;
+      border-radius: 1px;
+    }
+
+    .book-icon::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 4px;
+      width: 1px;
+      background: currentColor;
+      opacity: 0.55;
+    }
+
+    .topbar-title {
+      font-size: 10px;
+      line-height: 1;
+      font-weight: 400;
+      letter-spacing: 0.035em;
+    }
+
+    .app-main {
+      width: 100%;
+      flex: 1;
+      padding: 0 20px 18px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .intro {
+      padding: 33px 0 27px;
+      text-align: center;
+      flex: none;
+    }
+
+    .intro h1 {
+      font-family: "Inter", "Noto Serif SC", sans-serif;
+      font-size: clamp(27px, 7.4vw, 34px);
+      line-height: 1.23;
+      font-weight: 300;
+      letter-spacing: -0.075em;
+    }
+
+    .intro p {
+      width: 190px;
+      margin: 12px auto 0;
+      color: var(--muted);
+      font-size: 7px;
+      line-height: 1.65;
+      font-weight: 400;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+    }
+
+    .canvas-toolbar {
+      height: 28px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .mode-switch {
+      display: flex;
+      gap: 14px;
+    }
+
+    .mode-btn {
+      padding: 0 0 4px;
+      color: var(--muted);
+      border-bottom: 1px solid transparent;
+      font-size: 8px;
+      line-height: 1;
+      letter-spacing: 0.04em;
+    }
+
+    .mode-btn.active {
+      color: var(--ink);
+      border-bottom-color: var(--ink);
+    }
+
+    .canvas-tip {
+      max-width: 155px;
+      color: var(--muted);
+      font-size: 7px;
+      line-height: 1.3;
+      text-align: right;
+    }
+
+    .canvas-surface {
+      height: clamp(366px, 56dvh, 530px);
+      position: relative;
+      overflow: hidden;
+      background:
+        linear-gradient(116deg, transparent 0 55%, rgba(255, 255, 255, 0.58) 55.15% 56.3%, transparent 56.45%),
+        radial-gradient(ellipse at 75% 37%, #efefed 0 10%, transparent 10.6%),
+        linear-gradient(145deg, #fbfbfa 0%, #f6f6f4 48%, #efefed 100%);
+      border: 1px solid var(--line);
+      isolation: isolate;
+    }
+
+    .canvas-default-art {
+      position: absolute;
+      z-index: 0;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .canvas-default-art svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .canvas-surface.using-photo .canvas-default-art {
+      display: none;
+    }
+
+    .canvas-meta {
+      position: absolute;
+      z-index: 8;
+      top: 15px;
+      left: 16px;
+      right: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #767672;
+      font-family: "Courier Prime", monospace;
+      font-size: 7px;
+      line-height: 1;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      pointer-events: none;
+    }
+
+    .canvas-meta-actions {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .canvas-meta-actions > span {
+      color: #a1a19d;
+    }
+
+    .canvas-photo-button {
+      width: 44px;
+      height: 44px;
+      margin: -18px -12px -18px 0;
+      display: grid;
+      place-items: center;
+      color: #73736f;
+      pointer-events: auto;
+    }
+
+    .photo-icon {
+      width: 13px;
+      height: 10px;
+      position: relative;
+      display: block;
+      border: 1px solid currentColor;
+      border-radius: 1px;
+    }
+
+    .photo-icon::before {
+      content: "";
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      top: 2px;
+      right: 2px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .photo-icon::after {
+      content: "";
+      position: absolute;
+      left: 2px;
+      right: 2px;
+      bottom: 1px;
+      height: 5px;
+      border-top: 1px solid currentColor;
+      transform: skewY(-24deg);
+    }
+
+    .canvas-surface.using-photo {
+      background-image:
+        linear-gradient(150deg, rgba(253, 253, 252, 0.12), rgba(17, 17, 17, 0.31)),
+        var(--user-background);
+      background-position: center, center;
+      background-size: cover, cover;
+      background-repeat: no-repeat;
+    }
+
+    .canvas-surface.using-photo::before,
+    .canvas-surface.using-photo::after {
+      display: none;
+    }
+
+    .canvas-surface.using-photo .canvas-meta,
+    .canvas-surface.using-photo .canvas-meta-actions > span {
+      color: rgba(255, 255, 255, 0.84);
+      text-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .canvas-surface.using-photo .canvas-photo-button {
+      color: rgba(255, 255, 255, 0.9);
+      text-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .canvas-surface.using-photo .empty-state,
+    .canvas-surface.using-photo .empty-state span {
+      color: rgba(255, 255, 255, 0.8);
+      text-shadow: 0 1px 12px rgba(0, 0, 0, 0.35);
+    }
+
+    .canvas-surface.using-photo .empty-mark {
+      border-color: rgba(255, 255, 255, 0.7);
+    }
+
+    .canvas-surface.using-photo .empty-mark::before,
+    .canvas-surface.using-photo .empty-mark::after {
+      background: rgba(255, 255, 255, 0.84);
+    }
+
+    .flow-layout,
+    .free-layout {
+      position: relative;
+      z-index: 4;
+      width: 100%;
+      min-height: 100%;
+    }
+
+    .flow-layout {
+      padding: 53px 20px 29px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      align-content: center;
+      gap: 12px 13px;
+    }
+
+    .free-layout {
+      position: absolute;
+      inset: 45px 14px 14px;
+      width: auto;
+      min-height: 0;
+      height: auto;
+    }
+
+    .empty-state {
+      position: absolute;
+      z-index: 3;
+      inset: 0;
+      padding: 80px 32px 140px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      text-align: center;
+      pointer-events: none;
+    }
+
+    .empty-state.hidden {
+      display: none;
+    }
+
+    .empty-mark {
+      width: 42px;
+      height: 42px;
+      margin-bottom: 15px;
+      position: relative;
+      border: 1px solid #c8c8c4;
+      border-radius: 50%;
+    }
+
+    .empty-mark::before,
+    .empty-mark::after {
+      content: "";
+      position: absolute;
+      background: #8c8c88;
+    }
+
+    .empty-mark::before {
+      width: 13px;
+      height: 1px;
+      top: 20px;
+      left: 14px;
+    }
+
+    .empty-mark::after {
+      width: 1px;
+      height: 13px;
+      top: 14px;
+      left: 20px;
+    }
+
+    .empty-state strong {
+      font-family: "Noto Serif SC", serif;
+      font-size: 13px;
+      font-weight: 400;
+      letter-spacing: 0.12em;
+    }
+
+    .empty-state span {
+      margin-top: 8px;
+      color: #b0b0ac;
+      font-size: 8px;
+      line-height: 1.6;
+      letter-spacing: 0.05em;
+    }
+
+    .stamp-chip {
+      position: relative;
+      max-width: calc(100% - 24px);
+      min-height: 42px;
+      padding: 8px 11px 9px;
+      display: inline-flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 5px;
+      color: var(--ink);
+      background: rgba(253, 253, 252, 0.88);
+      border: 1px solid transparent;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.045);
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      transition: box-shadow 160ms ease, transform 160ms ease, background 160ms ease, color 160ms ease;
+    }
+
+    .stamp-chip[data-style="plain"] {
+      padding-left: 3px;
+      padding-right: 3px;
+      background: transparent;
+      border-bottom: 1px solid var(--ink);
+      box-shadow: none;
+    }
+
+    .stamp-chip[data-style="outline"] {
+      background: rgba(253, 253, 252, 0.58);
+      border-color: var(--ink);
+    }
+
+    .stamp-chip[data-style="ink"] {
+      color: #fff;
+      background: var(--ink);
+      border-color: var(--ink);
+    }
+
+    .stamp-chip.selected {
+      box-shadow: 0 0 0 2px var(--paper), 0 0 0 3px var(--ink), 0 14px 30px rgba(0, 0, 0, 0.11);
+      z-index: 12;
+    }
+
+    .stamp-chip.dragging {
+      cursor: grabbing;
+      box-shadow: 0 20px 38px rgba(0, 0, 0, 0.18);
+    }
+
+    .free-layout .stamp-chip {
+      position: absolute;
+      touch-action: none;
+    }
+
+    .stamp-tag {
+      color: currentColor;
+      font-family: "Courier Prime", monospace;
+      font-size: 6px;
+      line-height: 1;
+      letter-spacing: 0.08em;
+      opacity: 0.55;
+      text-transform: uppercase;
+    }
+
+    .stamp-text {
+      max-width: 230px;
+      font-family: "Noto Serif SC", serif;
+      font-size: clamp(16px, 5vw, 21px);
+      line-height: 1.45;
+      font-weight: 400;
+      letter-spacing: 0.07em;
+      overflow-wrap: anywhere;
+    }
+
+    .stamp-chip.long .stamp-text {
+      font-size: clamp(13px, 4vw, 17px);
+    }
+
+    .stamp-chip[data-style="ink"] .stamp-tag {
+      opacity: 0.5;
+    }
+
+    .stamp-delete {
+      position: absolute;
+      top: -9px;
+      right: -9px;
+      width: 24px;
+      height: 24px;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      background: var(--ink);
+      border: 2px solid var(--paper);
+      border-radius: 50%;
+      font-family: "Inter", sans-serif;
+      font-size: 10px;
+      line-height: 1;
+      opacity: 0;
+      transform: scale(0.78);
+      pointer-events: none;
+      transition: opacity 140ms ease, transform 140ms ease;
+    }
+
+    .stamp-chip.selected .stamp-delete {
+      opacity: 1;
+      transform: scale(1);
+      pointer-events: auto;
+    }
+
+    .stamp-rotate {
+      position: absolute;
+      right: -10px;
+      bottom: -10px;
+      width: 24px;
+      height: 24px;
+      display: grid;
+      place-items: center;
+      color: var(--ink);
+      background: var(--paper);
+      border: 1px solid var(--ink);
+      border-radius: 50%;
+      font-family: "Inter", sans-serif;
+      font-size: 11px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 140ms ease;
+    }
+
+    .free-layout .stamp-chip.selected .stamp-rotate {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .canvas-note {
+      min-height: 32px;
+      padding-top: 9px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 7px;
+      line-height: 1.5;
+      letter-spacing: 0.04em;
+    }
+
+    .canvas-note span:last-child {
+      text-align: right;
+    }
+
+    .bottom-bar {
+      min-height: calc(76px + var(--safe-bottom));
+      padding: 11px 20px var(--safe-bottom);
+      position: sticky;
+      z-index: 30;
+      bottom: 0;
+      margin-top: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      background: linear-gradient(to bottom, rgba(253, 253, 252, 0), rgba(253, 253, 252, 0.97) 25%);
+    }
+
+    .save-button {
+      min-height: 44px;
+      padding: 0 3px;
+      color: #797975;
+      font-size: 9px;
+      letter-spacing: 0.02em;
+    }
+
+    .save-button span {
+      margin-left: 3px;
+      font-size: 10px;
+    }
+
+    .history-action .arrow-icon {
+      margin-left: 3px;
+    }
+
+    .add-button {
+      width: 48px;
+      height: 48px;
+      flex: none;
+      display: grid;
+      place-items: center;
+      color: var(--ink);
+      background: var(--paper);
+      border: 1px solid var(--ink);
+      border-radius: 50%;
+      font-family: "Inter", sans-serif;
+      font-size: 22px;
+      font-weight: 300;
+      line-height: 1;
+      transition: color 180ms ease, background 180ms ease, transform 220ms ease;
+    }
+
+    .plus-mark {
+      width: 16px;
+      height: 16px;
+      position: relative;
+      display: block;
+    }
+
+    .plus-mark::before,
+    .plus-mark::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 0;
+      width: 16px;
+      height: 1px;
+      background: currentColor;
+    }
+
+    .plus-mark::after {
+      transform: rotate(90deg);
+    }
+
+    .add-button[aria-expanded="true"] {
+      color: #fff;
+      background: var(--ink);
+      transform: rotate(45deg);
+    }
+
+    .sheet-scrim {
+      position: fixed;
+      z-index: 80;
+      inset: 0;
+      background: rgba(18, 18, 18, 0.17);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 220ms ease;
+    }
+
+    .sheet-scrim.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .sheet {
+      position: fixed;
+      z-index: 90;
+      left: 50%;
+      bottom: 0;
+      width: var(--sheet-width);
+      max-height: min(78dvh, 680px);
+      padding: 10px 20px calc(18px + var(--safe-bottom));
+      color: var(--ink);
+      background: var(--paper);
+      border: 1px solid #e0e0dc;
+      border-bottom: 0;
+      border-radius: 26px 26px 0 0;
+      box-shadow: 0 -18px 60px rgba(0, 0, 0, 0.12);
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, 105%);
+      transition: opacity 220ms ease, transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
+      overflow: hidden;
+    }
+
+    .sheet.open {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translate(-50%, 0);
+    }
+
+    .sheet-handle {
+      width: 34px;
+      height: 3px;
+      margin: 1px auto 15px;
+      border-radius: 4px;
+      background: #d7d7d3;
+    }
+
+    .sheet-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+    .sheet-head h2 {
+      font-family: "Noto Serif SC", serif;
+      font-size: 18px;
+      line-height: 1.3;
+      font-weight: 400;
+      letter-spacing: 0.06em;
+    }
+
+    .sheet-head p {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 7px;
+      line-height: 1.5;
+      letter-spacing: 0.06em;
+    }
+
+    .sheet-close {
+      width: 36px;
+      height: 36px;
+      margin: -4px -7px 0 0;
+      display: grid;
+      place-items: center;
+      color: #72726f;
+      font-family: "Inter", sans-serif;
+      font-size: 19px;
+      font-weight: 300;
+    }
+
+    .type-strip {
+      margin: 20px -20px 0;
+      padding: 0 20px;
+      display: flex;
+      gap: 17px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .type-strip::-webkit-scrollbar {
+      display: none;
+    }
+
+    .type-btn {
+      flex: none;
+      min-height: 44px;
+      padding: 7px 0 8px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      color: var(--muted);
+      font-family: "Noto Serif SC", serif;
+      font-size: 10px;
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+
+    .type-btn.active {
+      color: var(--ink);
+    }
+
+    .type-btn.active::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 1px;
+      background: var(--ink);
+    }
+
+    .word-form {
+      height: 54px;
+      margin-top: 11px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid var(--ink);
+    }
+
+    .word-input {
+      flex: 1;
+      min-width: 0;
+      height: 100%;
+      border: 0;
+      outline: 0;
+      color: var(--ink);
+      background: transparent;
+      font-family: "Noto Serif SC", serif;
+      font-size: 14px;
+      letter-spacing: 0.04em;
+    }
+
+    .word-input::placeholder {
+      color: #aaa9a5;
+    }
+
+    .word-submit {
+      width: 38px;
+      height: 38px;
+      flex: none;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      background: var(--ink);
+      border-radius: 50%;
+      font-family: "Inter", sans-serif;
+      font-size: 17px;
+      line-height: 1;
+    }
+
+    .composer-foot {
+      margin-top: 12px;
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      color: #aaa9a5;
+      font-family: "Courier Prime", monospace;
+      font-size: 7px;
+      line-height: 1.5;
+      letter-spacing: 0.05em;
+    }
+
+    .menu-list {
+      margin-top: 17px;
+      border-top: 1px solid var(--line);
+    }
+
+    .menu-row {
+      width: 100%;
+      min-height: 55px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+    }
+
+    .menu-row:disabled {
+      opacity: 0.36;
+      cursor: default;
+    }
+
+    .menu-row strong {
+      display: block;
+      font-family: "Noto Serif SC", serif;
+      font-size: 12px;
+      font-weight: 400;
+      letter-spacing: 0.04em;
+    }
+
+    .menu-row small {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 7px;
+      line-height: 1.4;
+    }
+
+    .menu-row span:last-child {
+      color: #8c8c88;
+      font-family: "Inter", sans-serif;
+      font-size: 13px;
+    }
+
+    .menu-note {
+      margin-top: 12px;
+      color: #aaa9a5;
+      font-size: 7px;
+      line-height: 1.6;
+      letter-spacing: 0.03em;
+    }
+
+    .file-input {
+      position: fixed;
+      width: 1px;
+      height: 1px;
+      left: -9999px;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .history-scroll {
+      margin: 15px -20px 0;
+      max-height: calc(78dvh - 112px);
+      padding: 0 20px 5px;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
+
+    .history-list {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .history-item {
+      width: 100%;
+      padding: 17px 0 18px;
+      display: block;
+      border-top: 1px solid var(--line);
+      text-align: left;
+    }
+
+    .history-item:last-child {
+      border-bottom: 1px solid var(--line);
+    }
+
+    .history-date {
+      color: var(--muted);
+      font-family: "Courier Prime", monospace;
+      font-size: 7px;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+
+    .history-preview {
+      margin-top: 8px;
+      font-family: "Noto Serif SC", serif;
+      font-size: 15px;
+      line-height: 1.65;
+      letter-spacing: 0.05em;
+      font-weight: 400;
+    }
+
+    .history-action {
+      display: inline-block;
+      margin-top: 9px;
+      color: #8c8c88;
+      font-size: 7px;
+      letter-spacing: 0.04em;
+    }
+
+    .history-empty {
+      min-height: 170px;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      font-family: "Noto Serif SC", serif;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+    }
+
+    .toast {
+      position: fixed;
+      z-index: 120;
+      left: 50%;
+      bottom: calc(94px + var(--safe-bottom));
+      max-width: calc(100vw - 44px);
+      padding: 10px 16px;
+      color: #fff;
+      background: rgba(17, 17, 17, 0.92);
+      border-radius: 99px;
+      font-size: 10px;
+      line-height: 1.4;
+      letter-spacing: 0.02em;
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, 14px);
+      transition: opacity 180ms ease, transform 180ms ease;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    body.sheet-open {
+      overflow: hidden;
+    }
+
+    @media (max-height: 700px) {
+      .intro {
+        padding-top: 22px;
+        padding-bottom: 20px;
+      }
+
+      .canvas-surface {
+        height: 360px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <button class="icon-button" id="btn-menu" type="button" aria-label="打开诗页操作">
+        <span class="grid-icon" aria-hidden="true">
+          <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+        </span>
+      </button>
+      <span class="topbar-title">Home</span>
+      <button class="icon-button" id="btn-history" type="button" aria-label="打开诗歌日记">
+        <span class="book-icon" aria-hidden="true"></span>
+      </button>
+    </header>
+
+    <main class="app-main">
+      <section class="intro" aria-labelledby="page-title">
+        <h1 id="page-title">把今天，<br>写轻一点。</h1>
+        <p>Collect the fragments<br>of an ordinary day</p>
+      </section>
+
+      <div class="canvas-toolbar">
+        <div class="mode-switch" role="group" aria-label="排版方式">
+          <button class="mode-btn active" type="button" data-mode="flow" aria-pressed="true">自动排列</button>
+          <button class="mode-btn" type="button" data-mode="free" aria-pressed="false">自由拖拽</button>
+        </div>
+        <span class="canvas-tip" id="canvas-tip">轻触词贴进行编辑</span>
+      </div>
+
+      <section class="canvas-surface" id="poetry-canvas" aria-label="拼贴诗画布">
+        <div class="canvas-default-art" aria-hidden="true">
+          <svg viewBox="0 0 360 470" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="default-paper" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#fdfdfc"/>
+                <stop offset="0.55" stop-color="#f6f6f3"/>
+                <stop offset="1" stop-color="#ecece8"/>
+              </linearGradient>
+              <radialGradient id="default-glow" cx="38%" cy="28%" r="72%">
+                <stop offset="0" stop-color="#ffffff"/>
+                <stop offset="0.3" stop-color="#f1f1ee"/>
+                <stop offset="0.72" stop-color="#cececa"/>
+                <stop offset="1" stop-color="#e8e8e4" stop-opacity="0"/>
+              </radialGradient>
+              <linearGradient id="default-ink" x1="0" y1="0" x2="0.9" y2="1">
+                <stop offset="0" stop-color="#30302f"/>
+                <stop offset="0.42" stop-color="#151515"/>
+                <stop offset="1" stop-color="#080808"/>
+              </linearGradient>
+              <filter id="default-blur" x="-30%" y="-30%" width="160%" height="160%">
+                <feGaussianBlur stdDeviation="12"/>
+              </filter>
+              <filter id="default-grain" x="0" y="0" width="100%" height="100%">
+                <feTurbulence type="fractalNoise" baseFrequency="0.82" numOctaves="3" seed="8" result="noise"/>
+                <feColorMatrix in="noise" type="saturate" values="0" result="mono"/>
+                <feComponentTransfer in="mono">
+                  <feFuncA type="table" tableValues="0 0.12"/>
+                </feComponentTransfer>
+              </filter>
+            </defs>
+
+            <rect width="360" height="470" fill="url(#default-paper)"/>
+            <ellipse cx="279" cy="171" rx="177" ry="196" fill="url(#default-glow)" opacity="0.94"/>
+            <path d="M-28 343 C94 272 176 230 280 210 C347 197 395 218 417 263"
+              fill="none" stroke="#ffffff" stroke-width="34" opacity="0.34" filter="url(#default-blur)"/>
+            <path d="M89 -25 C137 72 183 136 273 186 C324 214 365 219 407 205"
+              fill="none" stroke="#dededa" stroke-width="1" opacity="0.62"/>
+            <path d="M145 -30 C191 69 238 125 318 157 C355 171 386 172 409 162"
+              fill="none" stroke="#ffffff" stroke-width="2" opacity="0.66"/>
+
+            <ellipse cx="128" cy="455" rx="210" ry="82"
+              fill="#a5a59f" opacity="0.12" filter="url(#default-blur)"/>
+
+            <g transform="translate(8 11)" opacity="0.13" filter="url(#default-blur)">
+              <path d="M332 474 C318 425 307 386 307 350 C307 314 322 286 331 254
+                       C340 222 335 190 337 157"
+                fill="none" stroke="#111111" stroke-width="3" stroke-linecap="round"/>
+              <path d="M320 365 C294 355 267 347 244 342
+                       M327 318 C351 300 371 277 389 250
+                       M333 263 C312 246 298 225 294 204
+                       M327 226 C343 208 350 186 347 163"
+                fill="none" stroke="#111111" stroke-width="2.2" stroke-linecap="round"/>
+              <ellipse cx="244" cy="342" rx="24" ry="10" transform="rotate(11 244 342)" fill="#111111"/>
+              <ellipse cx="389" cy="250" rx="24" ry="10" transform="rotate(-52 389 250)" fill="#111111"/>
+              <ellipse cx="294" cy="204" rx="22" ry="9" transform="rotate(23 294 204)" fill="#111111"/>
+              <ellipse cx="347" cy="163" rx="22" ry="9" transform="rotate(-55 347 163)" fill="#111111"/>
+              <ellipse cx="330" cy="133" rx="25" ry="10" transform="rotate(31 330 133)" fill="#111111"/>
+            </g>
+
+            <g fill="url(#default-ink)">
+              <path d="M332 474 C318 425 307 386 307 350 C307 314 322 286 331 254
+                       C340 222 335 190 337 157"
+                fill="none" stroke="#151515" stroke-width="2.4" stroke-linecap="round"/>
+              <path d="M320 365 C294 355 267 347 244 342
+                       M327 318 C351 300 371 277 389 250
+                       M333 263 C312 246 298 225 294 204
+                       M327 226 C343 208 350 186 347 163"
+                fill="none" stroke="#151515" stroke-width="1.45" stroke-linecap="round"/>
+              <path d="M244 342 C228 336 219 323 221 311 C237 308 251 316 257 329 C253 338 249 341 244 342Z"/>
+              <path d="M389 250 C382 234 385 220 397 211 C410 220 414 236 408 249 C402 250 396 251 389 250Z"/>
+              <path d="M294 204 C283 193 282 180 288 170 C301 174 309 186 307 198 C303 201 299 203 294 204Z"/>
+              <path d="M347 163 C340 149 343 136 353 127 C365 136 369 150 363 162 C358 163 352 164 347 163Z"/>
+              <path d="M330 133 C319 128 313 118 314 107 C327 104 339 111 344 122 C341 127 336 131 330 133Z"/>
+            </g>
+
+            <path d="M219 314 C232 304 247 302 258 306
+                     M397 215 C384 219 374 226 366 235
+                     M289 175 C300 180 308 189 312 198
+                     M351 131 C339 136 331 143 325 151"
+              fill="none" stroke="#ffffff" stroke-width="0.7" opacity="0.17"/>
+
+            <path d="M-15 389 C101 356 203 353 382 398" fill="none" stroke="#ffffff" stroke-width="1.2" opacity="0.53"/>
+            <circle cx="320" cy="86" r="2.1" fill="#ffffff" opacity="0.45"/>
+            <rect width="360" height="470" filter="url(#default-grain)" opacity="0.22"/>
+          </svg>
+        </div>
+
+        <div class="canvas-meta">
+          <span id="display-date">Oct 26, 2026</span>
+          <div class="canvas-meta-actions">
+            <span><span id="chip-count">00</span> fragments</span>
+            <button class="canvas-photo-button" type="button" data-pick-background aria-label="从相册选择背景照片">
+              <span class="photo-icon" aria-hidden="true"></span>
+            </button>
+          </div>
+        </div>
+
+        <div class="empty-state" id="empty-state">
+          <span class="empty-mark" aria-hidden="true"></span>
+          <strong>从一枚词开始</strong>
+          <span>收集此刻的碎片<br>让空白慢慢成为一首诗</span>
+        </div>
+
+        <div class="flow-layout" id="layout-wrapper">
+          <!-- 词贴会在这里按当前模式渲染 -->
+        </div>
+      </section>
+
+      <div class="canvas-note">
+        <span id="poem-status">POETRY JOURNAL · 026</span>
+        <span id="mode-tip">词贴会自然流向画布中央</span>
+      </div>
+    </main>
+
+    <footer class="bottom-bar">
+      <button class="save-button" id="btn-export" type="button">
+        保存诗页 <span class="arrow-icon" aria-hidden="true"></span>
+      </button>
+      <button class="add-button" id="btn-open-composer" type="button" aria-label="添加词贴" aria-expanded="false">
+        <span class="plus-mark" aria-hidden="true"></span>
+      </button>
+    </footer>
+  </div>
+
+  <div class="sheet-scrim" id="sheet-scrim"></div>
+
+  <section class="sheet" id="composer-sheet" aria-labelledby="composer-title" aria-hidden="true">
+    <div class="sheet-handle" aria-hidden="true"></div>
+    <div class="sheet-head">
+      <div>
+        <h2 id="composer-title">收集一个词</h2>
+        <p>把此刻留在这一页</p>
+      </div>
+      <button class="sheet-close" type="button" data-close-sheet aria-label="关闭">×</button>
+    </div>
+
+    <div class="type-strip" id="type-strip" aria-label="词贴类型">
+      <button class="type-btn active" type="button" data-type="景色">景色</button>
+      <button class="type-btn" type="button" data-type="心情">心情</button>
+      <button class="type-btn" type="button" data-type="句子">句子</button>
+      <button class="type-btn" type="button" data-type="名词">名词</button>
+      <button class="type-btn" type="button" data-type="动词">动词</button>
+      <button class="type-btn" type="button" data-type="形容词">形容词</button>
+      <button class="type-btn" type="button" data-type="时间">时间</button>
+      <button class="type-btn" type="button" data-type="地点">地点</button>
+      <button class="type-btn" type="button" data-type="人">人</button>
+      <button class="type-btn" type="button" data-type="动物">动物</button>
+      <button class="type-btn" type="button" data-type="食物">食物</button>
+      <button class="type-btn" type="button" data-type="自定义词">自定义词</button>
+    </div>
+
+    <form class="word-form" id="word-form">
+      <input
+        class="word-input"
+        id="input-word"
+        type="text"
+        maxlength="30"
+        autocomplete="off"
+        enterkeyhint="done"
+        placeholder="写下此刻的一个词…"
+        aria-label="输入新的词贴"
+      >
+      <button class="word-submit" type="submit" aria-label="加入诗句">
+        <span class="arrow-icon" aria-hidden="true"></span>
+      </button>
+    </form>
+
+    <div class="composer-foot">
+      <span id="selected-type-label">当前 · 景色</span>
+      <span>轻触词贴可选中或删除</span>
+    </div>
+  </section>
+
+  <section class="sheet" id="menu-sheet" aria-labelledby="menu-title" aria-hidden="true">
+    <div class="sheet-handle" aria-hidden="true"></div>
+    <div class="sheet-head">
+      <div>
+        <h2 id="menu-title">这一页</h2>
+        <p>Poet’s page actions</p>
+      </div>
+      <button class="sheet-close" type="button" data-close-sheet aria-label="关闭">×</button>
+    </div>
+    <div class="menu-list">
+      <button class="menu-row" type="button" data-pick-background>
+        <span>
+          <strong>选择背景照片</strong>
+          <small>从手机相册中选一张图片</small>
+        </span>
+        <span class="arrow-icon" aria-hidden="true"></span>
+      </button>
+      <button class="menu-row" type="button" id="btn-remove-background" disabled>
+        <span>
+          <strong>恢复默认背景</strong>
+          <small id="background-status">当前为默认黑白背景</small>
+        </span>
+        <span aria-hidden="true">×</span>
+      </button>
+      <button class="menu-row" type="button" id="btn-copy-poem">
+        <span>
+          <strong>复制诗句</strong>
+          <small>把这一页的文字放进剪贴板</small>
+        </span>
+        <span class="arrow-icon" aria-hidden="true"></span>
+      </button>
+      <button class="menu-row" type="button" id="btn-clear">
+        <span>
+          <strong>清空画布</strong>
+          <small>重新开始今天的一页</small>
+        </span>
+        <span aria-hidden="true">×</span>
+      </button>
+    </div>
+    <p class="menu-note">背景照片只保存在你的设备中，不会上传到服务器。</p>
+  </section>
+
+  <section class="sheet" id="history-sheet" aria-labelledby="history-title" aria-hidden="true">
+    <div class="sheet-handle" aria-hidden="true"></div>
+    <div class="sheet-head">
+      <div>
+        <h2 id="history-title">诗歌日记</h2>
+        <p>Saved pages / 保存过的诗页</p>
+      </div>
+      <button class="sheet-close" type="button" data-close-sheet aria-label="关闭">×</button>
+    </div>
+    <div class="history-scroll">
+      <div class="history-list" id="history-list"></div>
+    </div>
+  </section>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <input class="file-input" id="background-file" type="file" accept="image/*" tabindex="-1" aria-hidden="true" aria-label="选择背景照片">
+
+  <script>
+    (() => {
+      const STORAGE_KEY = "collage_poetry_history";
+      let today = new Date();
+      let dateLabel = "";
+      let shortDate = "";
+      const shortDateFormatter = new Intl.DateTimeFormat("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric"
+      });
+      const styles = ["plain", "outline", "ink", "plain"];
+
+      function formatDateStamp(value) {
+        return `${value.getFullYear()}.${String(value.getMonth() + 1).padStart(2, "0")}.${String(value.getDate()).padStart(2, "0")}`;
+      }
+
+      function formatShortDate(value) {
+        return shortDateFormatter.format(value);
+      }
+
+      dateLabel = formatDateStamp(today);
+      shortDate = formatShortDate(today);
+
+      const state = {
+        selectedType: "景色",
+        mode: "flow",
+        chips: [],
+        selectedId: null,
+        nextId: 1,
+        activeSheet: null,
+        backgroundImage: "",
+        backgroundImageElement: null,
+        defaultArtImage: null
+      };
+
+      const elements = {
+        canvas: document.getElementById("poetry-canvas"),
+        layout: document.getElementById("layout-wrapper"),
+        emptyState: document.getElementById("empty-state"),
+        date: document.getElementById("display-date"),
+        chipCount: document.getElementById("chip-count"),
+        poemStatus: document.getElementById("poem-status"),
+        modeTip: document.getElementById("mode-tip"),
+        canvasTip: document.getElementById("canvas-tip"),
+        typeStrip: document.getElementById("type-strip"),
+        input: document.getElementById("input-word"),
+        wordForm: document.getElementById("word-form"),
+        selectedTypeLabel: document.getElementById("selected-type-label"),
+        addButton: document.getElementById("btn-open-composer"),
+        menuButton: document.getElementById("btn-menu"),
+        historyButton: document.getElementById("btn-history"),
+        exportButton: document.getElementById("btn-export"),
+        copyButton: document.getElementById("btn-copy-poem"),
+        clearButton: document.getElementById("btn-clear"),
+        removeBackgroundButton: document.getElementById("btn-remove-background"),
+        backgroundStatus: document.getElementById("background-status"),
+        backgroundFile: document.getElementById("background-file"),
+        historyList: document.getElementById("history-list"),
+        scrim: document.getElementById("sheet-scrim"),
+        toast: document.getElementById("toast"),
+        sheets: {
+          composer: document.getElementById("composer-sheet"),
+          menu: document.getElementById("menu-sheet"),
+          history: document.getElementById("history-sheet")
+        }
+      };
+
+      elements.date.textContent = shortDate;
+
+      function refreshDate(force = false) {
+        const now = new Date();
+        const nextDateLabel = formatDateStamp(now);
+        const nextShortDate = formatShortDate(now);
+        if (!force && nextDateLabel === dateLabel && nextShortDate === shortDate) return;
+
+        today = now;
+        dateLabel = nextDateLabel;
+        shortDate = nextShortDate;
+        elements.date.textContent = shortDate;
+        syncCount();
+      }
+
+      function scheduleDateRefresh() {
+        const now = new Date();
+        const nextMidnight = new Date(now);
+        nextMidnight.setHours(24, 0, 0, 80);
+        window.setTimeout(() => {
+          refreshDate(true);
+          scheduleDateRefresh();
+        }, nextMidnight.getTime() - now.getTime());
+      }
+
+      function escapeHTML(value) {
+        return String(value)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      function showToast(message) {
+        window.clearTimeout(showToast.timer);
+        elements.toast.textContent = message;
+        elements.toast.classList.add("show");
+        showToast.timer = window.setTimeout(() => {
+          elements.toast.classList.remove("show");
+        }, 2300);
+      }
+
+      function syncCount() {
+        const count = state.chips.length;
+        elements.chipCount.textContent = String(count).padStart(2, "0");
+        elements.poemStatus.textContent = count
+          ? `${String(count).padStart(2, "0")} fragments / ${dateLabel}`
+          : "POETRY JOURNAL · 026";
+        elements.emptyState.classList.toggle("hidden", count > 0);
+        elements.canvas.classList.toggle("has-poem", count > 0);
+      }
+
+      function getFreeBounds() {
+        const width = elements.layout.clientWidth || 300;
+        const height = elements.layout.clientHeight || 360;
+        return { width, height };
+      }
+
+      function keepChipInBounds(chip, element) {
+        if (state.mode !== "free") return;
+        const bounds = getFreeBounds();
+        const maxX = Math.max(0, bounds.width - Math.min(element.offsetWidth, bounds.width));
+        const maxY = Math.max(0, bounds.height - Math.min(element.offsetHeight, bounds.height));
+        chip.x = Math.min(Math.max(0, chip.x), maxX);
+        chip.y = Math.min(Math.max(0, chip.y), maxY);
+        element.style.left = `${chip.x}px`;
+        element.style.top = `${chip.y}px`;
+      }
+
+      function loadImage(source) {
+        return new Promise((resolve, reject) => {
+          const image = new Image();
+          image.onload = () => resolve(image);
+          image.onerror = () => reject(new Error("无法读取这张照片"));
+          image.src = source;
+        });
+      }
+
+      async function prepareDefaultArtwork() {
+        const svg = elements.canvas.querySelector(".canvas-default-art svg");
+        if (!svg) return;
+        const serialized = new XMLSerializer().serializeToString(svg);
+        const source = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(serialized)}`;
+        try {
+          state.defaultArtImage = await loadImage(source);
+        } catch {
+          state.defaultArtImage = null;
+        }
+      }
+
+      function compressPhoto(image) {
+        const maxSide = 1400;
+        const scale = Math.min(1, maxSide / Math.max(image.naturalWidth, image.naturalHeight));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+        canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+        const context = canvas.getContext("2d");
+        context.fillStyle = "#fbfbfa";
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        return {
+          dataUrl: canvas.toDataURL("image/jpeg", 0.82),
+          element: canvas
+        };
+      }
+
+      function applyBackgroundState() {
+        const hasPhoto = Boolean(state.backgroundImage && state.backgroundImageElement);
+        elements.canvas.classList.toggle("using-photo", hasPhoto);
+        if (hasPhoto) {
+          elements.canvas.style.setProperty("--user-background", `url("${state.backgroundImage}")`);
+        } else {
+          elements.canvas.style.removeProperty("--user-background");
+        }
+        elements.removeBackgroundButton.disabled = !hasPhoto;
+        elements.backgroundStatus.textContent = hasPhoto
+          ? "当前使用相册照片"
+          : "当前为默认黑白背景";
+      }
+
+      async function usePhotoBackground(file) {
+        if (!file?.type.startsWith("image/")) {
+          showToast("请选择一张图片");
+          return;
+        }
+        if (file.size > 25 * 1024 * 1024) {
+          showToast("图片过大，请选择 25MB 以内的照片");
+          return;
+        }
+
+        const objectUrl = URL.createObjectURL(file);
+        try {
+          const sourceImage = await loadImage(objectUrl);
+          const compressed = compressPhoto(sourceImage);
+          state.backgroundImage = compressed.dataUrl;
+          state.backgroundImageElement = compressed.element;
+          applyBackgroundState();
+          closeSheet();
+          showToast("背景照片已更换");
+        } catch (error) {
+          console.error(error);
+          showToast("这张照片暂时无法使用");
+        } finally {
+          URL.revokeObjectURL(objectUrl);
+        }
+      }
+
+      async function restoreBackground(dataUrl) {
+        if (!dataUrl) {
+          state.backgroundImage = "";
+          state.backgroundImageElement = null;
+          applyBackgroundState();
+          return;
+        }
+
+        try {
+          const image = await loadImage(dataUrl);
+          state.backgroundImage = dataUrl;
+          state.backgroundImageElement = image;
+        } catch {
+          state.backgroundImage = "";
+          state.backgroundImageElement = null;
+        }
+        applyBackgroundState();
+      }
+
+      function renderCanvas() {
+        elements.layout.innerHTML = "";
+        elements.layout.className = state.mode === "flow" ? "flow-layout" : "free-layout";
+        syncCount();
+
+        if (!state.chips.length) return;
+
+        state.chips.forEach((chip, index) => {
+          const element = document.createElement("div");
+          element.className = "stamp-chip";
+          if (chip.selected) element.classList.add("selected");
+          if (chip.text.length > 10) element.classList.add("long");
+          element.dataset.id = chip.id;
+          element.dataset.style = chip.style;
+
+          if (state.mode === "flow") {
+            element.style.transform = `rotate(${chip.rotation}deg)`;
+          }
+
+          element.innerHTML = `
+            <span class="stamp-tag">${escapeHTML(chip.type)}</span>
+            <span class="stamp-text">${escapeHTML(chip.text)}</span>
+            <button class="stamp-delete" type="button" aria-label="删除 ${escapeHTML(chip.text)}">×</button>
+            ${state.mode === "free" ? '<button class="stamp-rotate" type="button" aria-label="旋转词贴">↻</button>' : ""}
+          `;
+
+          element.addEventListener("click", (event) => {
+            if (event.target.closest("button")) return;
+            if (element.dataset.suppressClick === "true") {
+              delete element.dataset.suppressClick;
+              return;
+            }
+            selectChip(chip.id);
+          });
+
+          element.querySelector(".stamp-delete").addEventListener("click", (event) => {
+            event.stopPropagation();
+            state.chips = state.chips.filter((item) => item.id !== chip.id);
+            if (state.selectedId === chip.id) state.selectedId = null;
+            renderCanvas();
+          });
+
+          if (state.mode === "free") {
+            element.style.transform = `rotate(${chip.rotation}deg)`;
+            enableDrag(element, chip);
+
+            element.querySelector(".stamp-rotate").addEventListener("click", (event) => {
+              event.stopPropagation();
+              chip.rotation = ((Number(chip.rotation) || 0) + 8) % 360;
+              element.style.transform = `rotate(${chip.rotation}deg)`;
+              keepChipInBounds(chip, element);
+            });
+          }
+
+          elements.layout.appendChild(element);
+
+          if (state.mode === "free") {
+            if (!chip.freePositioned) {
+              const bounds = getFreeBounds();
+              const column = index % 2;
+              const row = Math.floor(index / 2);
+              chip.x = column === 0
+                ? 12
+                : Math.max(22, bounds.width - element.offsetWidth - 12);
+              chip.y = 18 + row * 92;
+              chip.freePositioned = true;
+            }
+            keepChipInBounds(chip, element);
+          }
+        });
+      }
+
+      function selectChip(id) {
+        state.selectedId = state.selectedId === id ? null : id;
+        state.chips.forEach((chip) => {
+          chip.selected = chip.id === state.selectedId;
+        });
+        elements.layout.querySelectorAll(".stamp-chip").forEach((element) => {
+          element.classList.toggle("selected", Number(element.dataset.id) === state.selectedId);
+        });
+      }
+
+      function wrapCanvasText(context, text, maxWidth) {
+        if (!text) return [""];
+        const lines = [];
+        let current = "";
+
+        Array.from(text).forEach((character) => {
+          const next = current + character;
+          if (current && context.measureText(next).width > maxWidth) {
+            lines.push(current);
+            current = character;
+          } else {
+            current = next;
+          }
+        });
+
+        if (current) lines.push(current);
+        return lines;
+      }
+
+      function drawExportPoster(scale = 3) {
+        const width = elements.canvas.clientWidth;
+        const height = elements.canvas.clientHeight;
+        const output = document.createElement("canvas");
+        output.width = Math.round(width * scale);
+        output.height = Math.round(height * scale);
+        const context = output.getContext("2d");
+        context.scale(scale, scale);
+
+        context.fillStyle = "#fbfbfa";
+        context.fillRect(0, 0, width, height);
+
+        const usingPhoto = Boolean(state.backgroundImageElement);
+        if (usingPhoto) {
+          const photo = state.backgroundImageElement;
+          const sourceWidth = photo.naturalWidth || photo.width;
+          const sourceHeight = photo.naturalHeight || photo.height;
+          const coverScale = Math.max(width / sourceWidth, height / sourceHeight);
+          const drawWidth = sourceWidth * coverScale;
+          const drawHeight = sourceHeight * coverScale;
+          context.drawImage(
+            photo,
+            (width - drawWidth) / 2,
+            (height - drawHeight) / 2,
+            drawWidth,
+            drawHeight
+          );
+          const photoOverlay = context.createLinearGradient(0, 0, width, height);
+          photoOverlay.addColorStop(0, "rgba(253,253,252,0.12)");
+          photoOverlay.addColorStop(1, "rgba(17,17,17,0.31)");
+          context.fillStyle = photoOverlay;
+          context.fillRect(0, 0, width, height);
+        } else if (state.defaultArtImage) {
+          const art = state.defaultArtImage;
+          const coverScale = Math.max(width / art.naturalWidth, height / art.naturalHeight);
+          const drawWidth = art.naturalWidth * coverScale;
+          const drawHeight = art.naturalHeight * coverScale;
+          context.drawImage(
+            art,
+            (width - drawWidth) / 2,
+            (height - drawHeight) / 2,
+            drawWidth,
+            drawHeight
+          );
+        } else {
+          const light = context.createRadialGradient(
+            width * 0.72,
+            height * 0.34,
+            width * 0.02,
+            width * 0.72,
+            height * 0.34,
+            width * 0.46
+          );
+          light.addColorStop(0, "rgba(255,255,255,0.98)");
+          light.addColorStop(0.28, "rgba(232,232,229,0.92)");
+          light.addColorStop(0.73, "rgba(188,188,184,0.78)");
+          light.addColorStop(1, "rgba(232,232,229,0)");
+          context.fillStyle = light;
+          context.beginPath();
+          context.arc(width * 0.76, height * 0.36, width * 0.44, 0, Math.PI * 2);
+          context.fill();
+
+          context.save();
+          context.translate(width * 0.75, height * 0.83);
+          context.rotate(0.27);
+          context.fillStyle = "#151515";
+          context.beginPath();
+          context.ellipse(0, 0, width * 0.25, height * 0.35, 0, 0, Math.PI * 2);
+          context.fill();
+          context.restore();
+
+          const beam = context.createLinearGradient(0, 0, width, height * 0.8);
+          beam.addColorStop(0, "rgba(255,255,255,0)");
+          beam.addColorStop(0.52, "rgba(255,255,255,0.62)");
+          beam.addColorStop(1, "rgba(255,255,255,0)");
+          context.fillStyle = beam;
+          context.beginPath();
+          context.moveTo(width * 0.22, 0);
+          context.lineTo(width * 0.5, 0);
+          context.lineTo(width * 0.86, height);
+          context.lineTo(width * 0.62, height);
+          context.closePath();
+          context.fill();
+        }
+
+        context.fillStyle = usingPhoto ? "rgba(255,255,255,0.84)" : "#777773";
+        context.font = '7px "Courier Prime", monospace';
+        context.textBaseline = "top";
+        context.fillText(shortDate.toUpperCase(), 16, 15);
+
+        const countLabel = `${String(state.chips.length).padStart(2, "0")} FRAGMENTS`;
+        context.fillStyle = usingPhoto ? "rgba(255,255,255,0.68)" : "#9e9e9a";
+        context.textAlign = "right";
+        context.fillText(countLabel, width - 16, 15);
+        context.textAlign = "left";
+
+        const verticalSpace = Math.max(70, (height - 155) / Math.max(1, state.chips.length));
+        let flowY = Math.max(75, height * 0.3);
+
+        state.chips.forEach((chip, index) => {
+          const fontSize = chip.text.length > 10 ? 16 : 20;
+          const maxTextWidth = width * 0.58;
+          context.font = `400 ${fontSize}px "Noto Serif SC", serif`;
+          const lines = wrapCanvasText(context, chip.text, maxTextWidth);
+          const lineHeight = fontSize * 1.45;
+          const contentWidth = Math.min(
+            maxTextWidth,
+            Math.max(60, ...lines.map((line) => context.measureText(line).width))
+          );
+          const boxWidth = Math.min(width - 32, contentWidth + 20);
+          const boxHeight = lines.length * lineHeight + 29;
+          const rotation = (Number(chip.rotation) || 0) * Math.PI / 180;
+
+          let x;
+          let y;
+          if (state.mode === "free") {
+            x = 14 + Math.min(chip.x || 0, width - boxWidth - 20);
+            y = 45 + Math.min(chip.y || 0, height - boxHeight - 20);
+          } else {
+            x = index % 3 === 1 ? 51 : 20;
+            y = flowY;
+            flowY += Math.max(verticalSpace, boxHeight + 13);
+          }
+
+          context.save();
+          context.translate(x + boxWidth / 2, y + boxHeight / 2);
+          context.rotate(rotation);
+          context.translate(-boxWidth / 2, -boxHeight / 2);
+
+          if (chip.style === "ink") {
+            context.fillStyle = "#111111";
+            context.fillRect(0, 0, boxWidth, boxHeight);
+          } else if (chip.style === "outline") {
+            context.fillStyle = "rgba(253,253,252,0.82)";
+            context.fillRect(0, 0, boxWidth, boxHeight);
+            context.strokeStyle = "#111111";
+            context.lineWidth = 1;
+            context.strokeRect(0.5, 0.5, boxWidth - 1, boxHeight - 1);
+          } else {
+            context.strokeStyle = "#111111";
+            context.lineWidth = 1;
+            context.beginPath();
+            context.moveTo(3, boxHeight - 1.5);
+            context.lineTo(boxWidth - 3, boxHeight - 1.5);
+            context.stroke();
+          }
+
+          context.fillStyle = chip.style === "ink" ? "rgba(255,255,255,0.56)" : "rgba(17,17,17,0.5)";
+          context.font = '6px "Courier Prime", monospace';
+          context.fillText(chip.type.toUpperCase(), 10, 8);
+
+          context.fillStyle = chip.style === "ink" ? "#ffffff" : "#111111";
+          context.font = `400 ${fontSize}px "Noto Serif SC", serif`;
+          lines.forEach((line, lineIndex) => {
+            context.fillText(line, 10, 18 + lineIndex * lineHeight);
+          });
+          context.restore();
+        });
+
+        return output;
+      }
+
+      function addWord() {
+        const text = elements.input.value.trim();
+        if (!text) {
+          showToast("先写下一个词");
+          elements.input.focus();
+          return;
+        }
+
+        const chip = {
+          id: state.nextId++,
+          text,
+          type: state.selectedType,
+          style: styles[(state.nextId + state.chips.length) % styles.length],
+          rotation: (Math.random() * 5.4 - 2.7).toFixed(1),
+          x: 0,
+          y: 0,
+          freePositioned: false,
+          selected: false
+        };
+
+        state.chips.push(chip);
+        elements.input.value = "";
+        closeSheet();
+        state.selectedId = null;
+        renderCanvas();
+        showToast(`已收下「${text}」`);
+      }
+
+      function enableDrag(element, chip) {
+        let pointerId = null;
+        let startX = 0;
+        let startY = 0;
+        let startLeft = 0;
+        let startTop = 0;
+        let moved = false;
+        let pointerWasActive = false;
+
+        element.addEventListener("pointerdown", (event) => {
+          if (event.button !== 0 || event.target.closest(".stamp-delete, .stamp-rotate")) return;
+          pointerId = event.pointerId;
+          pointerWasActive = true;
+          moved = false;
+          startX = event.clientX;
+          startY = event.clientY;
+          startLeft = Number(chip.x) || 0;
+          startTop = Number(chip.y) || 0;
+          element.setPointerCapture(pointerId);
+        });
+
+        element.addEventListener("pointermove", (event) => {
+          if (event.pointerId !== pointerId) return;
+          const dx = event.clientX - startX;
+          const dy = event.clientY - startY;
+          if (Math.abs(dx) + Math.abs(dy) > 3) moved = true;
+          if (!moved) return;
+
+          if (!element.classList.contains("dragging")) {
+            element.classList.add("selected", "dragging");
+            state.selectedId = chip.id;
+            state.chips.forEach((item) => {
+              item.selected = item.id === chip.id;
+            });
+          }
+
+          chip.x = startLeft + dx;
+          chip.y = startTop + dy;
+          element.style.left = `${chip.x}px`;
+          element.style.top = `${chip.y}px`;
+          keepChipInBounds(chip, element);
+        });
+
+        const endDrag = (event) => {
+          if (event.pointerId !== pointerId) return;
+          pointerId = null;
+          element.classList.remove("dragging");
+          if (pointerWasActive && moved && event.type === "pointerup") {
+            element.dataset.suppressClick = "true";
+            window.setTimeout(() => {
+              delete element.dataset.suppressClick;
+            }, 80);
+          }
+          pointerWasActive = false;
+        };
+
+        element.addEventListener("pointerup", endDrag);
+        element.addEventListener("pointercancel", endDrag);
+      }
+
+      function setMode(mode) {
+        state.mode = mode;
+        state.selectedId = null;
+        state.chips.forEach((chip) => {
+          chip.selected = false;
+        });
+
+        document.querySelectorAll(".mode-btn").forEach((button) => {
+          const active = button.dataset.mode === mode;
+          button.classList.toggle("active", active);
+          button.setAttribute("aria-pressed", String(active));
+        });
+
+        elements.modeTip.textContent = mode === "flow"
+          ? "词贴会自然流向画布中央"
+          : "按住词贴移动，轻触后可旋转或删除";
+        elements.canvasTip.textContent = mode === "flow"
+          ? "轻触词贴进行编辑"
+          : "按住词贴自由移动";
+        renderCanvas();
+      }
+
+      function openSheet(name) {
+        closeSheet();
+        const sheet = elements.sheets[name];
+        if (!sheet) return;
+        state.activeSheet = name;
+        sheet.classList.add("open");
+        sheet.setAttribute("aria-hidden", "false");
+        elements.scrim.classList.add("open");
+        document.body.classList.add("sheet-open");
+        elements.addButton.setAttribute("aria-expanded", String(name === "composer"));
+
+        if (name === "composer") {
+          window.setTimeout(() => elements.input.focus({ preventScroll: true }), 220);
+        }
+      }
+
+      function closeSheet() {
+        Object.values(elements.sheets).forEach((sheet) => {
+          sheet.classList.remove("open");
+          sheet.setAttribute("aria-hidden", "true");
+        });
+        elements.scrim.classList.remove("open");
+        document.body.classList.remove("sheet-open");
+        elements.addButton.setAttribute("aria-expanded", "false");
+        state.activeSheet = null;
+      }
+
+      function getHistory() {
+        try {
+          const value = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+          return Array.isArray(value) ? value : [];
+        } catch {
+          return [];
+        }
+      }
+
+      function saveToHistory() {
+        if (!state.chips.length) return;
+        const history = getHistory();
+        const entry = {
+          id: Date.now(),
+          date: dateLabel,
+          preview: state.chips.map((chip) => chip.text).join(" / "),
+          mode: state.mode,
+          backgroundImage: state.backgroundImage,
+          chips: state.chips.map(({ selected, ...chip }) => chip)
+        };
+        history.unshift(entry);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(history.slice(0, 12)));
+      }
+
+      function renderHistory() {
+        const history = getHistory();
+        if (!history.length) {
+          elements.historyList.innerHTML = '<div class="history-empty">还没有保存过诗页</div>';
+          return;
+        }
+
+        elements.historyList.innerHTML = history.map((entry) => `
+          <button class="history-item" type="button" data-history-id="${entry.id}">
+            <span class="history-date">${escapeHTML(entry.date)} · ${escapeHTML(entry.mode === "free" ? "自由排版" : "自动排列")}</span>
+            <span class="history-preview">${escapeHTML(entry.preview)}</span>
+            <span class="history-action">重新打开这一页 <span class="arrow-icon" aria-hidden="true"></span></span>
+          </button>
+        `).join("");
+
+        elements.historyList.querySelectorAll("[data-history-id]").forEach((button) => {
+          button.addEventListener("click", async () => {
+            const entry = history.find((item) => String(item.id) === button.dataset.historyId);
+            if (!entry) return;
+            state.chips = (entry.chips || []).map((chip) => ({ ...chip, selected: false }));
+            state.nextId = Math.max(1, ...state.chips.map((chip) => Number(chip.id) + 1));
+            state.selectedId = null;
+            closeSheet();
+            await restoreBackground(entry.backgroundImage || "");
+            setMode(entry.mode === "free" ? "free" : "flow");
+            showToast("已打开保存的诗页");
+          });
+        });
+      }
+
+      async function copyPoem() {
+        const text = state.chips.map((chip) => chip.text).join("\n");
+        if (!text) {
+          showToast("这一页还没有词");
+          return;
+        }
+        try {
+          await navigator.clipboard.writeText(text);
+          closeSheet();
+          showToast("诗句已复制");
+        } catch {
+          showToast("复制失败，请手动选择文字");
+        }
+      }
+
+      async function exportPoem() {
+        if (!state.chips.length) {
+          showToast("先收集几个词，再保存诗页");
+          return;
+        }
+
+        state.selectedId = null;
+        state.chips.forEach((chip) => { chip.selected = false; });
+        renderCanvas();
+        saveToHistory();
+        showToast("正在生成诗页…");
+
+        try {
+          const canvas = drawExportPoster(Math.min(3, Math.max(2, window.devicePixelRatio || 1)));
+          const link = document.createElement("a");
+          link.download = `拼贴诗日记_${today.getFullYear()}${today.getMonth() + 1}${today.getDate()}.png`;
+          link.href = canvas.toDataURL("image/png");
+          link.style.display = "none";
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          showToast("诗页已保存到日记");
+        } catch (error) {
+          console.error(error);
+          showToast("生成图片失败，请稍后再试");
+        }
+      }
+
+      elements.typeStrip.addEventListener("click", (event) => {
+        const button = event.target.closest(".type-btn");
+        if (!button) return;
+        elements.typeStrip.querySelectorAll(".type-btn").forEach((item) => {
+          item.classList.toggle("active", item === button);
+        });
+        state.selectedType = button.dataset.type;
+        elements.selectedTypeLabel.textContent = `当前 · ${state.selectedType}`;
+      });
+
+      document.querySelectorAll("[data-pick-background]").forEach((button) => {
+        button.addEventListener("click", () => {
+          elements.backgroundFile.value = "";
+          elements.backgroundFile.click();
+        });
+      });
+
+      elements.backgroundFile.addEventListener("change", () => {
+        const [file] = elements.backgroundFile.files || [];
+        if (file) usePhotoBackground(file);
+      });
+
+      elements.removeBackgroundButton.addEventListener("click", () => {
+        state.backgroundImage = "";
+        state.backgroundImageElement = null;
+        applyBackgroundState();
+        closeSheet();
+        showToast("已恢复默认背景");
+      });
+
+      elements.wordForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        addWord();
+      });
+
+      document.querySelectorAll(".mode-btn").forEach((button) => {
+        button.addEventListener("click", () => setMode(button.dataset.mode));
+      });
+
+      elements.addButton.addEventListener("click", () => {
+        if (state.activeSheet === "composer") closeSheet();
+        else openSheet("composer");
+      });
+      elements.menuButton.addEventListener("click", () => openSheet("menu"));
+      elements.historyButton.addEventListener("click", () => {
+        renderHistory();
+        openSheet("history");
+      });
+      elements.exportButton.addEventListener("click", exportPoem);
+      elements.copyButton.addEventListener("click", copyPoem);
+      elements.clearButton.addEventListener("click", () => {
+        if (!state.chips.length) {
+          showToast("画布已经是空白的");
+          return;
+        }
+        if (window.confirm("确定清空这一页吗？")) {
+          state.chips = [];
+          state.selectedId = null;
+          closeSheet();
+          renderCanvas();
+          showToast("画布已清空");
+        }
+      });
+
+      elements.scrim.addEventListener("click", closeSheet);
+      document.querySelectorAll("[data-close-sheet]").forEach((button) => {
+        button.addEventListener("click", closeSheet);
+      });
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && state.activeSheet) closeSheet();
+      });
+
+      window.addEventListener("resize", () => {
+        elements.layout.querySelectorAll(".stamp-chip").forEach((element) => {
+          const chip = state.chips.find((item) => item.id === Number(element.dataset.id));
+          if (chip) keepChipInBounds(chip, element);
+        });
+      });
+
+      document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) refreshDate();
+      });
+      window.addEventListener("focus", () => refreshDate());
+      window.setInterval(() => refreshDate(), 60 * 1000);
+
+      applyBackgroundState();
+      scheduleDateRefresh();
+      prepareDefaultArtwork();
+      renderCanvas();
+    })();
+  </script>
+</body>
+</html>
